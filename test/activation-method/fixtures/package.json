@@ -1,8 +1,0 @@
-{
-  "name": "activation-method-fixtures",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "elastic-apm-node": "file:../../.."
-  }
-}
