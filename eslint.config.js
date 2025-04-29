@@ -21,7 +21,6 @@ module.exports = [
       '*.example.js', // a pattern for uncommited local dev files to avoid linting
       '*.example.mjs', // a pattern for uncommited local dev files to avoid linting
 
-      'test_output/**',
       'tmp/**',
       '.nyc_output/**',
       'build/**',
@@ -31,7 +30,7 @@ module.exports = [
 
       'examples/esbuild/dist/**',
       'examples/typescript/dist/**',
-      'examples/an-azure-function-app/**',
+      'examples/azure-function-app/**',
       'lib/opentelemetry-bridge/opentelemetry-core-mini/**',
       'test/babel/out.js',
       'test/lambda/fixtures/esbuild-bundled-handler/hello.js',

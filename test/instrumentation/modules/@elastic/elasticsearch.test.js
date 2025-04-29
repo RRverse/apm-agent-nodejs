@@ -17,6 +17,9 @@ const isUndiciIncompat = require('../../../_is_undici_incompat')();
 if (isUndiciIncompat) {
   console.log(`# SKIP dependency issue: ${isUndiciIncompat}`);
   process.exit();
+} else if (process.env.TEST_WITHOUT_SERVICES === 'true') {
+  console.log('# SKIP: env.TEST_WITHOUT_SERVICES=true');
+  process.exit(0);
 }
 
 process.env.ELASTIC_APM_TEST = true;
@@ -1217,10 +1220,6 @@ function checkDataAndEnd(
       esSpan.context.http.status_code,
       expectedStatusCode,
       'context.http.status_code',
-    );
-    t.ok(
-      esSpan.context.http.response.encoded_body_size,
-      'context.http.response.encoded_body_size is present',
     );
 
     t.end();

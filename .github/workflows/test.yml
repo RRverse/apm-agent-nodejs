@@ -32,7 +32,7 @@ permissions:
 jobs:
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -96,7 +96,7 @@ jobs:
         image: mcr.microsoft.com/mssql/server
         env:
           ACCEPT_EULA: 'Y'
-          SA_PASSWORD: 'Very(!)Secure'
+          MSSQL_SA_PASSWORD: 'Very(!)Secure'
           MSSQL_PID: 'Developer'
         ports:
           - 1433:1433
@@ -104,7 +104,7 @@ jobs:
           - nodemssqldata:/var/opt/mssql
 
       elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
         env:
           ES_JAVA_OPTS: '-Xms512m -Xmx512m'
           network.host: '_site_'
@@ -164,7 +164,7 @@ jobs:
           - '16.0'
           - '14'
           - '14.17'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -175,15 +175,6 @@ jobs:
     - run: npm ls --all || true
     - name: npm test
       run: npm test
-    - uses: inception-health/otel-upload-test-artifact-action@v1
-      if: always()
-      continue-on-error: true
-      with:
-        jobName: "test-vers (${{ matrix.node }})"
-        stepName: "npm test"
-        path: "test_output/*.junit.xml"
-        type: "junit"
-        githubToken: ${{ secrets.GITHUB_TOKEN }}
 
   test-windows:
     runs-on: windows-latest
@@ -206,14 +197,14 @@ jobs:
   # failure if at least one job listed "needs" is not successful.
   test:
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - lint
       - test-vers
       - test-windows
     steps:
       - id: check
-        uses: elastic/apm-pipeline-library/.github/actions/check-dependent-jobs@current
+        uses: elastic/oblt-actions/check-dependent-jobs@v1
         with:
-          needs: ${{ toJSON(needs) }}
-      - run: ${{ steps.check.outputs.isSuccess }}
+          jobs: ${{ toJSON(needs) }}
+      - run: ${{ steps.check.outputs.is-success }}

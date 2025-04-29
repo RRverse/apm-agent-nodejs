@@ -45,24 +45,7 @@ setup_env () {
 run_test_suite () {
   npm run test:deps
 
-  # If running in CI, then output .tap files and covert them to JUnit
-  # format for test reporting.
-  local testArgs=""
-  if [[ -n "$CI" ]]; then
-    rm -rf ./test_output
-    mkdir ./test_output
-    testArgs="-o ./test_output"
-  fi
-
-  if [[ -n "$COVERAGE" ]]; then
-    nyc node test/test.js $testArgs
-  else
-    node test/test.js $testArgs
-  fi
-
-  if [[ -n "$CI" ]]; then
-    ls test_output/*.tap | while read f; do cat $f | ./node_modules/.bin/tap-junit > $f.junit.xml; done
-  fi
+  node test/test.js
 
   if [[ $major_node_version -gt 14 ]] || [[ $major_node_version -eq 14 && $minor_node_version -ge 17 ]]; then
     npm run test:types # typescript@5.1.0 engines.node is >=14.17
@@ -107,7 +90,7 @@ then
 else
   # No arguments was given. Let's just assume that the user wants to
   # spin up all dependencies inside Docker and run the tests locally
-  services=$(docker-compose  -f ./test/docker-compose.yml  config --services)
+  services=$(docker compose  -f ./test/docker-compose.yml  config --services)
 fi
 
 service_arr=( $services )
@@ -123,11 +106,11 @@ then
 elif [[ $healthy -lt $expected_healthy || $containers -lt $expected_containers ]]
 then
   finish () {
-    docker-compose -f ./test/docker-compose.yml down
+    docker compose -f ./test/docker-compose.yml down
   }
   trap finish EXIT
 
-  docker-compose -f ./test/docker-compose.yml up -d $services
+  docker compose -f ./test/docker-compose.yml up -d $services
   wait_for_healthy
 fi
 

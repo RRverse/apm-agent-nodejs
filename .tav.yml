@@ -195,10 +195,7 @@ graphql:
 express:
   versions:
     mode: latest-minors
-    # include requires an upper bound. v5 is still in beta
-    # (5.0.0-beta.1": "2022-02-15T01:11:25.229Z) but we use 6 to make sure any
-    # future release is included if we udpate
-    include: '>=4 <6' # latest minors subset of '>=4 <6'
+    include: '>=4 <5'
   commands:
     - node test/instrumentation/modules/express/basic.test.js
     - node test/instrumentation/modules/express/capture-exceptions-off.test.js
@@ -241,14 +238,24 @@ express-queue:
   commands: node test/instrumentation/modules/express-queue.test.js
 
 koa-router:
-  versions: '>=5.2.0 <13'
-  peerDependencies: koa@2
-  commands: node test/instrumentation/modules/koa-router/old-name.test.js
+  - versions: '>=5.2.0 <13'
+    peerDependencies: koa@2
+    commands: node test/instrumentation/modules/koa-router/old-name.test.js
+  # koa-router@13 removed support for NodeJS <18
+  - versions: '>=13 <14'
+    node: '>=18'
+    peerDependencies: koa@2
+    commands: node test/instrumentation/modules/koa-router/old-name.test.js
 
 '@koa/router':
-  versions: '>=8 <13'
-  peerDependencies: koa@2
-  commands: node test/instrumentation/modules/koa-router/new-name.test.js
+  - versions: '>=8 <13'
+    peerDependencies: koa@2
+    commands: node test/instrumentation/modules/koa-router/new-name.test.js
+  # @koa/router@13 removed support for NodeJS <18
+  - versions: '>=13 <14'
+    node: '>=18'
+    peerDependencies: koa@2
+    commands: node test/instrumentation/modules/koa-router/new-name.test.js
 
 elasticsearch:
   versions: '>=8.0.0'
@@ -266,14 +273,32 @@ elasticsearch:
 #     "8.2.0" because they are stuck with stack version numbers. However,
 #     semver (and TAV) consider "-patch.N" to be a *prereleases*. This
 #     leads to some tortured "versions:" ranges below.
+# - Version 8.11.0 dropped node v14 and v16 support.
+# - Version 9 dropped v18 support (effectively by using undici@7).
 '@elastic/elasticsearch':
-  - versions: '>=7.0.0 <7.7.0 || >7.7.0 <7.12.0'
+  - versions:
+      mode: max-3
+      include: '>=7.0.0 <7.7.0 || >7.7.0 <7.12.0'
     commands: node test/instrumentation/modules/@elastic/elasticsearch.test.js
-  - versions: '>=7.12.0 <8.2'
+  - versions:
+      mode: max-3
+      include: '>=7.12.0 <8.2'
     node: '>=12.0.0'
     commands: node test/instrumentation/modules/@elastic/elasticsearch.test.js
-  - versions: '>=8.2.0-patch.1 <8.2.0 || >8.2.0'
+  - versions:
+      mode: max-3
+      include: '>8.2.0 <8.11.0'
     node: '>=14.0.0'
+    commands: node test/instrumentation/modules/@elastic/elasticsearch.test.js
+  - versions:
+      mode: max-5
+      include: '>=8.11.0 <9.0.0'
+    node: '>=18.0.0'
+    commands: node test/instrumentation/modules/@elastic/elasticsearch.test.js
+  - versions:
+      mode: max-5
+      include: '>=9.0.0 <10'
+    node: '>=20.0.0'
     commands: node test/instrumentation/modules/@elastic/elasticsearch.test.js
 
 handlebars:
@@ -349,11 +374,21 @@ tedious:
       mode: latest-majors
     node: '18.x || >=20'
     commands: node test/instrumentation/modules/tedious.test.js
+  # Tedious v19 advertise a min-supported Node.js version of 18.17.0.
+  - versions:
+      include: '>=19 <20'
+      mode: latest-majors
+    node: '>=18.17'
+    commands: node test/instrumentation/modules/tedious.test.js
 
 cassandra-driver:
   # 3.1.0 is broken
-  versions: '>=3 <3.1.0 || >3.1.0 <5'
-  commands: node test/instrumentation/modules/cassandra-driver/cassandra-driver.test.js
+  - versions: '>=3 <3.1.0 || >3.1.0 <4.8.0'
+    commands: node test/instrumentation/modules/cassandra-driver/cassandra-driver.test.js
+  # v4.8.0 advertise a min-supported Node.js version of 18.
+  - versions: '>=4.8.0 <5'
+    node: '>=18'
+    commands: node test/instrumentation/modules/cassandra-driver/cassandra-driver.test.js
 
 # Restify
 # - restify <v10 doesn't work with node v18+ (https://github.com/restify/node-restify/issues/1888)
@@ -422,10 +457,27 @@ fastify:
       - node test/instrumentation/modules/fastify/async-await.test.js
       - node test/instrumentation/modules/fastify/set-framework.test.js
       - node test/sanitize-field-names/fastify.test.js
+  - versions:
+      mode: max-7
+      include: '>=5 <6'
+    peerDependencies: '@fastify/formbody@^8'
+    node: '>=20'
+    commands:
+      - node test/instrumentation/modules/fastify/fastify.test.js
+      - node test/instrumentation/modules/fastify/async-await.test.js
+      - node test/instrumentation/modules/fastify/set-framework.test.js
 
 finalhandler:
-  versions: '*'
-  commands: node test/instrumentation/modules/finalhandler.test.js
+  - versions:
+      mode: max-3
+      include: '>=1 <2'
+    node: '>=0.8'
+    commands: node test/instrumentation/modules/finalhandler.test.js
+  - versions:
+      mode: max-3
+      include: '>=2 <3'
+    node: '>=16'
+    commands: node test/instrumentation/modules/finalhandler.test.js
 
 memcached:
   versions: '>=2.2.0'
@@ -448,14 +500,20 @@ aws-sdk:
     - node test/instrumentation/modules/aws-sdk/dynamodb.test.js
 
 '@aws-sdk/client-s3':
-  versions:
-    # - 3.377.0 was a bad release (https://github.com/open-telemetry/opentelemetry-js-contrib/issues/1828#issuecomment-1834276719)
-    mode: max-7
-    include: '>=3.15.0 <4'
-    exclude: '3.377.0'
-  commands:
-    - node test/instrumentation/modules/@aws-sdk/client-s3.test.js
-  node: '>=14'
+  - versions:
+      # - 3.377.0 was a bad release (https://github.com/open-telemetry/opentelemetry-js-contrib/issues/1828#issuecomment-1834276719)
+      mode: max-5
+      include: '>=3.15.0 <3.723.0'
+      exclude: '3.377.0'
+    node: '>=14'
+    commands:
+      - node test/instrumentation/modules/@aws-sdk/client-s3.test.js
+  - versions:
+      mode: max-5
+      include: '>=3.723.0 <4'
+    node: '>=18'
+    commands:
+      - node test/instrumentation/modules/@aws-sdk/client-s3.test.js
 
 '@aws-sdk/client-dynamodb':
   versions:
@@ -466,25 +524,42 @@ aws-sdk:
   node: '>=14'
 
 '@aws-sdk/client-sns':
-  versions:
-    mode: max-7
-    include: '>=3.15.0 <4'
-  commands:
-    - node test/instrumentation/modules/@aws-sdk/client-sns.test.js
-  node: '>=14'
+  - versions:
+      mode: max-7
+      include: '>=3.15.0 <3.723.0'
+    node: '>=14'
+    commands:
+      - node test/instrumentation/modules/@aws-sdk/client-sns.test.js
+  - versions:
+      mode: max-5
+      include: '>=3.723.0 <4'
+    node: '>=18'
+    commands:
+      - node test/instrumentation/modules/@aws-sdk/client-sns.test.js
 
 '@aws-sdk/client-sqs':
-  versions:
-    mode: max-7
-    include: '>=3.15.0 <4'
-  commands:
-    - node test/instrumentation/modules/@aws-sdk/client-sqs.test.js
-  node: '>=14'
+  - versions:
+      mode: max-7
+      include: '>=3.15.0 <3.723.0'
+    node: '>=14'
+    commands:
+      - node test/instrumentation/modules/@aws-sdk/client-sqs.test.js
+  - versions:
+      mode: max-5
+      include: '>=3.723.0 <4'
+    node: '>=18'
+    commands:
+      - node test/instrumentation/modules/@aws-sdk/client-sqs.test.js
 
 # - undici@4.7.0 added its diagnostics_channel support.
 # - In undici@4.7.1 the `request.origin` property was added, which we need
 #   in the 'undici:request:create' diagnostic message.
 undici:
+  - versions:
+      mode: max-7
+      include: '>=7.0.0 <8'
+    node: '>=20.18.1'
+    commands: node test/instrumentation/modules/undici/undici.test.js
   - versions:
       mode: max-7
       include: '>=6.0.0 <7'

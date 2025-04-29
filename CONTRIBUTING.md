@@ -43,7 +43,7 @@ Once your changes are ready to submit for review:
 
     * See the [Commit message guidelines](#commit-message-guidelines) below.
     * If your changes will be visible to users of this package, then add an item
-      to the "Unreleased" section of [the changelog](./CHANGELOG.asciidoc).
+      to the "Next" section of [release notes](docs/release-notes/index.md).
     * If you are changing usage of this package, are there updates under
       "docs/" that should be made?
 
@@ -194,11 +194,11 @@ A release involves the following published artifacts:
     - the version in `package.json`,
     - the version in `package-lock.json` (by running `npm install`),
     - all cases of "REPLACEME" in docs and comments,
-    - "CHANGELOG.asciidoc": Add missing changelog entries, if any. Then change
-      the "Unreleased" section title to:
+    - "docs/release-notes/index.md": Add missing release notes, if any. Then change
+      the "Next" section title, release date, and sub-section anchors:
         ```
-        [[release-notes-x.y.z]]
-        ==== x.y.z - YYYY/MM/DD
+        ## x.y.z [x-y-z]
+        ...
         ```
    If there are particular highlights for the release, then it can be helpful
    to point those out in the PR description.
@@ -212,14 +212,17 @@ A release involves the following published artifacts:
    steps -- including the `npm publish`. See the appropriate run at:
    https://github.com/elastic/apm-agent-nodejs/actions/workflows/release.yml)
 
-4. If this is for the latest major (currently `4.x`), then the "4.x" branch
-   needs to be updated to the same state as the release tag on "main". Use
-   the [update-4x-branch.sh](./dev-utils/update-4x-branch.sh) script for this.
+4. Updating published docs: If this is for the latest major (currently `4.x`),
+   then the "do-not-delete_legacy-docs" branch needs to be updated to the same
+   state as the release tag on "main". Use the
+   [update-legacy-docs-branch.sh](./dev-utils/update-legacy-docs-branch.sh)
+   script for this.
 
-    - Run `./dev-utils/update-4x-branch.sh` to create a working dir with the
+    - Run `./dev-utils/update-legacy-docs-branch.sh` to create a working dir with the
       needed changes.
     - Follow its instructions to create a PR from this working dir.
     - Ensure the "buildkite/docs-build-pr" workflow passes for this branch.
+      (Re-run via `run docs-build` comment.)
     - "Squash and merge" the PR.
     - The periodic docs CI will update the
       [published docs](https://www.elastic.co/guide/en/apm/agent/nodejs/current/release-notes-4.x.html).

@@ -5,6 +5,8 @@
  */
 
 'use strict';
+
+const http = require('http');
 const querystring = require('querystring');
 const mockClient = require('../_mock_http_client');
 
@@ -94,6 +96,7 @@ function createAgentConfig(values = {}) {
     metricsInterval: 0,
     centralConfig: false,
     captureBody: 'all',
+    apmServerVersion: '8.17.0',
   };
 
   const agentConfig = Object.assign(values, defaultAgentConfig);
@@ -114,9 +117,42 @@ function getBodyAsObject(string) {
   }
 }
 
+/**
+ * Convenience function to make an form-encoded HTTP POST request and callback
+ * with the body, `cb(null, res, body)`.
+ */
+function requestPost(url, headers, form, cb) {
+  const u = new URL(url);
+  const req = http.request(
+    {
+      method: 'POST',
+      hostname: u.hostname,
+      port: u.port,
+      path: u.pathname + u.search,
+      headers: Object.assign(
+        { 'content-type': 'application/x-www-form-urlencoded' },
+        headers,
+      ),
+    },
+    (res) => {
+      const chunks = [];
+      res.on('data', (chunk) => {
+        chunks.push(chunk);
+      });
+      res.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
+        cb(null, res, body);
+      });
+    },
+  );
+  req.write(querystring.encode(form));
+  req.end();
+}
+
 module.exports = {
   createAgentConfig,
   getBodyAsObject,
+  requestPost,
   resetAgent,
   assertRequestHeadersWithFixture,
   assertResponseHeadersWithFixture,

@@ -9,6 +9,9 @@
 if (process.env.GITHUB_ACTIONS === 'true' && process.platform === 'win32') {
   console.log('# SKIP: GH Actions do not support docker services on Windows');
   process.exit(0);
+} else if (process.env.TEST_WITHOUT_SERVICES === 'true') {
+  console.log('# SKIP: env.TEST_WITHOUT_SERVICES=true');
+  process.exit(0);
 }
 
 // The unhandledRejection will be fired by our bluebird tests, which is to be
@@ -1229,14 +1232,15 @@ test('new Promise -> delay', function (t) {
     var trans = ins.startTransaction();
     var start = Date.now();
 
+    const tolerance = 5; // We've observed scheduling slop up to 2ms.
     Promise.resolve('foo')
       .delay(50)
       .then(function () {
-        var expected = start + 49; // timings are hard
+        var expected = start + (50 - tolerance);
         var now = Date.now();
         t.ok(
           expected <= now,
-          'start + 49 should be <= ' + now + ' - was ' + expected,
+          '(start + 50 - tolerance) should be <= ' + now + ' - was ' + expected,
         );
         t.strictEqual(ins.currTransaction().id, trans.id);
       });

@@ -31,19 +31,21 @@ services:
       retries: 30
 
   mssql:
-    image: mcr.microsoft.com/mssql/server
+    # Tags listed at https://hub.docker.com/r/microsoft/mssql-server
+    # Docs: https://learn.microsoft.com/en-us/sql/linux/quickstart-install-connect-docker
+    image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
     platform: linux/amd64
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=Very(!)Secure
+      - MSSQL_SA_PASSWORD=Very(!)Secure
       - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
       - nodemssqldata:/var/opt/mssql
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "mssql", "-U", "sa", "-P", "Very(!)Secure", "-Q", "select 1"]
-      interval: 30s
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "mssql", "-U", "sa", "-P", "Very(!)Secure", "-Q", "select 1"]
+      interval: 10s
       timeout: 10s
       retries: 5
 
@@ -72,7 +74,7 @@ services:
       retries: 30
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - "network.host=_site_"

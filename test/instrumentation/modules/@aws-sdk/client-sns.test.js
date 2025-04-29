@@ -14,6 +14,9 @@
 if (process.env.GITHUB_ACTIONS === 'true' && process.platform === 'win32') {
   console.log('# SKIP: GH Actions do not support docker services on Windows');
   process.exit(0);
+} else if (process.env.TEST_WITHOUT_SERVICES === 'true') {
+  console.log('# SKIP: env.TEST_WITHOUT_SERVICES=true');
+  process.exit(0);
 }
 
 const test = require('tape');
@@ -235,6 +238,24 @@ const testFixtures = [
       t.equal(spans.length, 0, 'all spans accounted for');
     },
   },
+
+  {
+    name: 'use-client-sns.js without a created transaction to ensure does not crash',
+    script: 'fixtures/use-client-sns.js',
+    cwd: __dirname,
+    env: {
+      AWS_ACCESS_KEY_ID: 'fake',
+      AWS_SECRET_ACCESS_KEY: 'fake',
+      TEST_ENDPOINT: endpoint,
+      TEST_REGION: 'us-east-2',
+      TEST_NO_TRANSACTION: 'true',
+    },
+    versionRanges: {
+      node: '>=14',
+    },
+    verbose: true,
+  },
+
   {
     name: '@aws-sdk/client-sns ESM',
     script: 'fixtures/use-client-sns.mjs',
